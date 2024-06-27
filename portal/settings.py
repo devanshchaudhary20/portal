@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'integrations',
 ]
 
 MIDDLEWARE = [
@@ -116,6 +117,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+# LinkedIn Secrets
+LINKEDIN_CLIENT_ID = '86ikto1ls1gscv'
+LINKEDIN_CLIENT_SECRET = 'AilUhOJSMVL14Yf6'
+LINKEDIN_REDIRECT_URI = 'http://127.0.0.1:8000/linkedin-callback'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
