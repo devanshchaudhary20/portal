@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create a Post on LinkedIn</title>
+</head>
+<body>
+    <h1>Create a Post on LinkedIn</h1>
+    <form method="post" action="{% url 'post_on_linkedin' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Post</button>
+    </form>
+</body>
+</html>

@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 
+from celery.schedules import crontab
+import pymysql
+pymysql.install_as_MySQLdb()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -39,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'integrations',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -117,11 +122,33 @@ USE_I18N = True
 
 USE_TZ = True
 
-# LinkedIn Secrets
+# LinkedIn & Twitter Secrets
 LINKEDIN_CLIENT_ID = '86ikto1ls1gscv'
 LINKEDIN_CLIENT_SECRET = 'AilUhOJSMVL14Yf6'
 LINKEDIN_REDIRECT_URI = 'http://127.0.0.1:8000/linkedin-callback'
 
+TWITTER_CLIENT_ID = 'RnY1NTZzOHFmdFZLZWtHcy1BSzg6MTpjaQ'
+TWITTER_CLIENT_SECRET = '_SrYVv55V4KSEQjZKDSHdp7MdiSxzODjnAy4rktmkxEatmSyOE'
+TWITTER_REDIRECT_URI = 'http://127.0.0.1:8000/twitter-callback'
+
+
+# Celery configuration
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_ENABLE_UTC = False
+
+# Celery Beat schedule
+CELERY_BEAT_SCHEDULE = {
+    'process-scheduled-posts': {
+        'task': 'integrations.tasks.process_scheduled_posts',
+        'schedule': crontab(minute='*/5'),  # Every 5 minutes
+    },
+}
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
