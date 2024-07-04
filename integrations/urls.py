@@ -10,5 +10,7 @@ urlpatterns = [
     path('twitter-callback/', views.twitter_callback, name='twitter_callback'),
     path('twitter-post-form/', views.twitter_post_form, name='twitter_post_form'),
     path('post-on-twitter/', views.post_on_twitter, name='post_on_twitter'),
-    path('linkedin-post-form/', views.linkedin_post_form, name='linkedin_post_form'),  # Add this line
+    path('linkedin-post-form/', views.linkedin_post_form, name='linkedin_post_form'),
+    path('cancel_scheduled_post/<int:post_id>/', views.cancel_scheduled_post, name='cancel_scheduled_post'),
+    path('scheduled_post_cancelled/', views.scheduled_post_cancelled, name='scheduled_post_cancelled'),
 ]

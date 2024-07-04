@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'integrations',
     'django_celery_beat',
+    'firms',
 ]
 
 MIDDLEWARE = [
@@ -116,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -125,11 +126,11 @@ USE_TZ = True
 # LinkedIn & Twitter Secrets
 LINKEDIN_CLIENT_ID = '86ikto1ls1gscv'
 LINKEDIN_CLIENT_SECRET = 'AilUhOJSMVL14Yf6'
-LINKEDIN_REDIRECT_URI = 'http://127.0.0.1:8000/linkedin-callback'
+LINKEDIN_REDIRECT_URI = 'http://127.0.0.1:8000/integrations/linkedin-callback'
 
 TWITTER_CLIENT_ID = 'RnY1NTZzOHFmdFZLZWtHcy1BSzg6MTpjaQ'
 TWITTER_CLIENT_SECRET = '_SrYVv55V4KSEQjZKDSHdp7MdiSxzODjnAy4rktmkxEatmSyOE'
-TWITTER_REDIRECT_URI = 'http://127.0.0.1:8000/twitter-callback'
+TWITTER_REDIRECT_URI = 'http://127.0.0.1:8000/integrations/twitter-callback'
 
 
 # Celery configuration
@@ -146,7 +147,7 @@ CELERY_ENABLE_UTC = False
 CELERY_BEAT_SCHEDULE = {
     'process-scheduled-posts': {
         'task': 'integrations.tasks.process_scheduled_posts',
-        'schedule': crontab(minute='*/5'),  # Every 5 minutes
+        'schedule': crontab(minute='*/2'),  # Every 5 minutes
     },
 }
 # Static files (CSS, JavaScript, Images)

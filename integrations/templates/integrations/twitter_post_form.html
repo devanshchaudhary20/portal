@@ -7,7 +7,7 @@
     <h1>Create a Post on Twitter</h1>
     <form method="post" action="{% url 'post_on_twitter' %}">
         {% csrf_token %}
-        <textarea name="content" rows="4" cols="50" placeholder="Write your tweet here..."></textarea><br>
+        {{ form.as_p }}
         <button type="submit">Post</button>
     </form>
 </body>

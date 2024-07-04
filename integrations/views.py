@@ -3,12 +3,15 @@ import hashlib
 import json
 import secrets
 import logging
+
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils import timezone
 from .models import ScheduledPost
-from .forms import LinkedInPostForm
+from .forms import LinkedInPostForm, TwitterPostForm
 import requests
 from django.conf import settings
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +97,7 @@ def get_linkedin_user_info(access_token):
     else:
         return None
 
+
 def linkedin_post_form(request):
     form = LinkedInPostForm()
     return render(request, 'integrations/linkedin_post_form.html', {'form': form})
@@ -114,8 +118,7 @@ def post_on_linkedin(request):
             scheduled_at = timezone.make_aware(scheduled_at)
 
         if scheduled_at and scheduled_at > timezone.now():
-            # Schedule the post for a future time by saving to database
-            ScheduledPost.objects.create(
+            scheduled_post = ScheduledPost.objects.create(
                 platform='linkedin',
                 content=content,
                 scheduled_at=scheduled_at,
@@ -123,19 +126,23 @@ def post_on_linkedin(request):
                 access_token=access_token
             )
 
-            # Optionally, you can store the scheduled post details in session for confirmation
             request.session['scheduled_linkedin_post'] = {
                 'content': content,
                 'scheduled_at': scheduled_at_str,
             }
 
-            return render(request, 'integrations/scheduled_confirmation.html', {'scheduled_at': scheduled_at_str})
+            return render(request, 'integrations/scheduled_confirmation.html', {
+                'scheduled_at': scheduled_at_str,
+                'content': content,
+                'post_id': scheduled_post.id
+            })
 
         # If immediate post or scheduled time is past, proceed with immediate post
         return post_on_linkedin_without_schedule(request)
 
     form = LinkedInPostForm()
     return render(request, 'integrations/linkedin_post_form.html', {'form': form})
+
 
 def post_on_linkedin_without_schedule(request):
     access_token = request.session.get('linkedin_access_token')
@@ -177,10 +184,19 @@ def post_on_linkedin_without_schedule(request):
 
     return render(request, 'integrations/post_success.html', {'post_urn': post_urn})
 
+
 def post_on_linkedin_now(post):
     access_token = post.access_token
+
     user_info = get_linkedin_user_info(access_token)
-    userId = user_info['sub']
+    if not user_info:
+        logger.error("Failed to retrieve user info with access token.")
+        return
+
+    userid = user_info.get('sub')
+    if not userid:
+        logger.error("User ID not found in user info.")
+        return
 
     headers = {
         'Authorization': f'Bearer {access_token}',
@@ -189,7 +205,7 @@ def post_on_linkedin_now(post):
     }
 
     post_data = {
-        "author": f"urn:li:person:" + userId,
+        "author": f"urn:li:person:" + userid,
         "lifecycleState": "PUBLISHED",
         "specificContent": {
             "com.linkedin.ugc.ShareContent": {
@@ -205,7 +221,21 @@ def post_on_linkedin_now(post):
     }
 
     response = requests.post("https://api.linkedin.com/v2/ugcPosts", headers=headers, json=post_data)
-    logger.info(f"LinkedIn post response: {response.status_code}, {response.text}")
+    if response.status_code == 201:
+        logger.info(f"Successfully posted to LinkedIn. Post ID: {response.json().get('id')}")
+    else:
+        logger.error(f"Failed to post to LinkedIn: {response.status_code} {response.text}")
+
+
+def cancel_scheduled_post(request, post_id):
+    post = get_object_or_404(ScheduledPost, id=post_id)
+    post.status = 'cancelled'
+    post.save()
+    return HttpResponseRedirect(reverse('scheduled_post_cancelled'))
+
+
+def scheduled_post_cancelled(request):
+    return render(request, 'integrations/scheduled_post_cancelled.html')
 
 
 def twitter_auth(request):
@@ -262,9 +292,73 @@ def twitter_callback(request):
     return redirect('twitter_post_form')
 
 def twitter_post_form(request):
-    return render(request, 'integrations/twitter_post_form.html')
+    form = TwitterPostForm()
+    return render(request, 'integrations/twitter_post_form.html', {'form': form})
+
 
 def post_on_twitter(request):
+    if request.method == 'POST':
+        access_token = request.session.get('twitter_access_token')
+        if not access_token:
+            return redirect('twitter_auth')
+
+        content = request.POST.get('content')
+        scheduled_at_str = request.POST.get('scheduled_at')
+        scheduled_at = None
+
+        if scheduled_at_str:
+            scheduled_at = timezone.datetime.strptime(scheduled_at_str, '%Y-%m-%d %H:%M')
+            scheduled_at = timezone.make_aware(scheduled_at)
+
+        if scheduled_at and scheduled_at > timezone.now():
+            scheduled_post = ScheduledPost.objects.create(
+                platform='twitter',
+                content=content,
+                scheduled_at=scheduled_at,
+                status='scheduled',
+                access_token=access_token
+            )
+
+            request.session['scheduled_twitter_post'] = {
+                'content': content,
+                'scheduled_at': scheduled_at_str,
+            }
+
+            return render(request, 'integrations/scheduled_confirmation.html', {
+                'scheduled_at': scheduled_at_str,
+                'content': content,
+                'post_id': scheduled_post.id
+            })
+
+        # If immediate post or scheduled time is past, proceed with immediate post
+        return post_on_twitter_without_schedule(request)
+
+    form = TwitterPostForm()
+    return render(request, 'integrations/twitter_post_form.html', {'form': form})
+
+
+def post_on_twitter_now(post):
+    access_token = post.access_token
+    tweet_url = "https://api.twitter.com/2/tweets"
+
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    post_data = {
+        "text": post.content
+    }
+
+    response = requests.post(tweet_url, headers=headers, json=post_data)
+
+    if response.status_code == 201:
+        logger.info(f"Successfully posted to Twitter. Tweet ID: {response.json().get('data', {}).get('id')}")
+    else:
+        logger.error(f"Failed to post to Twitter: {response.status_code} {response.text}")
+
+
+def post_on_twitter_without_schedule(request):
     if request.method == 'POST':
         access_token = request.session.get('twitter_access_token')
         if not access_token:

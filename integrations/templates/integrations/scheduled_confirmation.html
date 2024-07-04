@@ -11,6 +11,7 @@
     <p><strong>{{ scheduled_at }}</strong></p>
     <p>Content:</p>
     <p>{{ content }}</p>
-    <p>You can <a href="{% url 'post_on_linkedin' %}">cancel</a> this scheduled post if needed.</p>
+    <p>You can <a href="{% url 'cancel_scheduled_post' post_id %}">cancel</a> this scheduled post if needed.</p>
+    <a href="{% url 'landing_page' %}">Back to Home</a>
 </body>
 </html>
