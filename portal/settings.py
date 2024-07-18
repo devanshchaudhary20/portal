@@ -124,12 +124,12 @@ USE_I18N = True
 USE_TZ = True
 
 # LinkedIn & Twitter Secrets
-LINKEDIN_CLIENT_ID = '86ikto1ls1gscv'
-LINKEDIN_CLIENT_SECRET = 'AilUhOJSMVL14Yf6'
+LINKEDIN_CLIENT_ID = 'xxx'
+LINKEDIN_CLIENT_SECRET = 'xxx'
 LINKEDIN_REDIRECT_URI = 'http://127.0.0.1:8000/integrations/linkedin-callback'
 
-TWITTER_CLIENT_ID = 'RnY1NTZzOHFmdFZLZWtHcy1BSzg6MTpjaQ'
-TWITTER_CLIENT_SECRET = '_SrYVv55V4KSEQjZKDSHdp7MdiSxzODjnAy4rktmkxEatmSyOE'
+TWITTER_CLIENT_ID = 'xxx'
+TWITTER_CLIENT_SECRET = 'xxx'
 TWITTER_REDIRECT_URI = 'http://127.0.0.1:8000/integrations/twitter-callback'
 
 
